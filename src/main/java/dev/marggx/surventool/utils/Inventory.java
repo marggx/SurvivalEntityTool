@@ -1,0 +1,125 @@
+package dev.marggx.surventool.utils;
+
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.math.util.ChunkUtil;
+import com.hypixel.hytale.protocol.InteractionType;
+import com.hypixel.hytale.server.core.entity.InteractionContext;
+import com.hypixel.hytale.server.core.entity.InteractionManager;
+import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.event.events.ecs.UseBlockEvent;
+import com.hypixel.hytale.server.core.inventory.InventoryComponent;
+import com.hypixel.hytale.server.core.inventory.ItemStack;
+import com.hypixel.hytale.server.core.inventory.container.CombinedItemContainer;
+import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
+import com.hypixel.hytale.server.core.inventory.transaction.ItemStackSlotTransaction;
+import com.hypixel.hytale.server.core.inventory.transaction.ItemStackTransaction;
+import com.hypixel.hytale.server.core.modules.block.components.ItemContainerBlock;
+import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
+import com.hypixel.hytale.server.core.modules.interaction.InteractionSimulationHandler;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.World;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import org.joml.Vector3i;
+
+import java.util.*;
+
+public class Inventory {
+
+    public static InventoryScan collectNearbyItems(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range, boolean alsoPlayerInv) {
+        HashMap<String, Integer> items = new HashMap<>();
+        var scannedContainers = new ArrayList<ScannedInventory>();
+        var position = store.getComponent(ref, TransformComponent.getComponentType()).getPosition();
+        for (int x = -range; x <= range; x++) {
+            for (int y = -range; y < range; y++) {
+                for (int z = -range; z <= range; z++) {
+                    var worldChunk = world.getChunk(ChunkUtil.indexChunkFromBlock(position.x() + x, position.z() + z));
+                    if (worldChunk == null) continue;
+                    var blockRef = worldChunk.getBlockComponentEntity((int) (position.x() + x), (int) (position.y() + y), (int) (position.z() + z));
+
+                    if (blockRef == null) continue;
+
+                    var containerBlock = blockRef.getStore().getComponent(blockRef, ItemContainerBlock.getComponentType());
+                    if (containerBlock != null) {
+                        var inventory = containerBlock.getItemContainer();
+                        if (scannedContainers.stream().anyMatch(scannedInventory -> scannedInventory.container().equals(inventory))) continue;
+                        if (!isBlockInteractable(ref, world, (int) (position.x() + x), (int) (position.y() + y), (int) (position.z() + z)))
+                            continue;
+                        scannedContainers.add(new ScannedInventory(inventory, containerBlock));
+                        for (short i = 0; i < inventory.getCapacity(); i++) {
+                            var stack = inventory.getItemStack(i);
+                            if (stack != null && !stack.isEmpty()) {
+                                items.put(stack.getItem().getId(), items.getOrDefault(stack.getItem().getId(), 0) + stack.getQuantity());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (alsoPlayerInv) {
+            CombinedItemContainer inv = InventoryComponent.getCombined(store, ref, InventoryComponent.EVERYTHING);
+            inv.forEach((index, itemStack) -> {
+                items.put(itemStack.getItem().getId(), items.getOrDefault(itemStack.getItem().getId(), 0) + itemStack.getQuantity());
+            });
+        }
+
+        return new InventoryScan(sortItems(items), scannedContainers);
+    }
+
+    public static InventoryScan refreshScan(List<ScannedInventory> scannedInventories) {
+        HashMap<String, Integer> items = new HashMap<>();
+        for (ScannedInventory scannedInventory : scannedInventories) {
+            var inventory = scannedInventory.container();
+            for (short i = 0; i < inventory.getCapacity(); i++) {
+                var stack = inventory.getItemStack(i);
+                if (stack != null && !stack.isEmpty()) {
+                    items.put(stack.getItem().getId(), items.getOrDefault(stack.getItem().getId(), 0) + stack.getQuantity());
+                }
+            }
+        }
+        return new InventoryScan(sortItems(items), scannedInventories);
+    }
+
+    private static HashMap<String, Integer> sortItems(HashMap<String, Integer> items) {
+        List<Map.Entry<String, Integer>> list = new LinkedList<>(items.entrySet());
+        list.sort(Map.Entry.comparingByValue());
+        list = list.reversed();
+        return list.stream().collect(LinkedHashMap::new, (m, v) -> m.put(v.getKey(), v.getValue()), HashMap::putAll);
+    }
+
+    public record InventoryScan(HashMap<String, Integer> items, List<ScannedInventory> scannedInventories) {}
+
+    public record ScannedInventory(ItemContainer container, ItemContainerBlock containerBlock) {}
+
+    public static boolean isBlockInteractable(Ref<EntityStore> ref, World world, int x, int y, int z){
+        if (!ref.getStore().isInThread()) return false;
+        var blockType = world.getBlockType(x, y, z);
+        if (blockType == null && blockType.getId().toLowerCase(Locale.ROOT).contains("trash")) return false;
+        var playerRef = ref.getStore().getComponent(ref, PlayerRef.getComponentType());
+        var interactionManager = new InteractionManager(playerRef, new InteractionSimulationHandler());
+        var event = new UseBlockEvent.Pre(InteractionType.Use, InteractionContext.forProxyEntity(interactionManager, ref, ref, ref.getStore()), new Vector3i(x, y, z), blockType);
+        ref.getStore().invoke(ref, event);
+        return !event.isCancelled();
+    }
+
+    public static boolean removeItemFromAnyInventory (List<ScannedInventory> inventories, String name, Ref<EntityStore> ref, Store<EntityStore> store) {
+        for (ScannedInventory inventory : inventories) {
+            ItemContainer container = inventory.container();
+            for (short i = 0; i < container.getCapacity(); i++) {
+                ItemStack stack = container.getItemStack(i);
+                if (stack == null || stack.isEmpty() || !stack.getItem().getId().equals(name)) {
+                    continue;
+                }
+                ItemStackSlotTransaction transaction = container.removeItemStackFromSlot(i, 1);
+                if (transaction.succeeded() && transaction.getOutput() != null) {
+                    return true;
+                }
+            }
+        }
+        CombinedItemContainer inv = InventoryComponent.getCombined(store, ref, InventoryComponent.EVERYTHING);
+        ItemStack item = new ItemStack(name, 1);
+        ItemStackTransaction transaction = inv.removeItemStack(item);
+        return transaction.succeeded();
+    }
+}

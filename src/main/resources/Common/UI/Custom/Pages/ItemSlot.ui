@@ -1,0 +1,9 @@
+$C = "../Common.ui";
+
+ItemSlotButton #ItemButton {
+  Anchor: (Width: 64, Bottom: 2, Right: 2, Height: 64);
+  Padding: 2;
+  ItemSlot #ItemSlot {
+
+  }
+}

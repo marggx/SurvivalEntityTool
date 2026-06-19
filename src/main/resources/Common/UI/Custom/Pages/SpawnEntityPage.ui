@@ -1,0 +1,166 @@
+$C = "../Common.ui";
+
+@ContainerHeight = 730;
+@MaterialSlotSize = 46;
+@ItemsSlotSize = 62;
+
+$C.@Container {
+  Anchor: (Left: 50, Top: 50, Width: 450, Bottom: 120);
+
+  #Title {
+    Group {
+      LayoutMode: Left;
+      $C.@Title {
+        @Text = %server.customUI.entitySpawnPage.title;
+      }
+    }
+
+    $C.@HeaderSearch {}
+  }
+
+  #Content {
+    Group #ItemsContent {
+      FlexWeight: 1;
+      LayoutMode: Center;
+
+      Group {
+        LayoutMode: Top;
+
+        Label {
+          Text: %server.customUI.entitySpawnPage.material;
+          Padding: (Bottom: 8);
+          Style: (
+            ...$C.@DefaultLabelStyle,
+            HorizontalAlignment: Center
+          );
+        }
+
+        Group {
+          Anchor: (Height: @MaterialSlotSize);
+          LayoutMode: Center;
+
+          Group {
+            Anchor: (Width: @MaterialSlotSize, Height: @MaterialSlotSize);
+
+            ItemGrid #ItemMaterialSlot {
+              Anchor: (Width: @MaterialSlotSize, Height: @MaterialSlotSize, Horizontal: 0, Vertical: 0);
+              SlotsPerRow: 1;
+              Style: (
+                SlotSize: @MaterialSlotSize,
+                SlotIconSize: @MaterialSlotSize,
+                SlotSpacing: 0,
+                SlotBackground: "../Common/BlockSelectorSlotBackground.png"
+              );
+            }
+
+            Group #DropIndicator {
+              Anchor: (Width: 24, Height: 24, Horizontal: 0, Vertical: 0);
+              Background: "../Common/BlockSelectorSlotDropIcon.png";
+              HitTestVisible: false;
+            }
+          }
+        }
+
+        $C.@SecondaryTextButton #ClearMaterial {
+          Text: %server.customUI.entitySpawnPage.clear;
+          Anchor: (Top: 10);
+          Visible: false;
+        }
+        Group #AvailableItemsList {
+          Anchor: (Top: 12, Height: 500);
+          LayoutMode: TopScrolling;
+          ScrollbarStyle: $C.@DefaultScrollbarStyle;
+        }
+      }
+    }
+    Group {
+      LayoutMode: Top;
+      Anchor: (Top: 20);
+      Background: (TexturePath: "../Common/ContainerPanelPatch.png", Border: 4);
+      Padding: (Bottom: 18);
+
+      Label #SelectedName {
+        Padding: 8;
+        Style: (
+          FontSize: 18,
+          RenderUppercase: true,
+          RenderBold: true,
+          HorizontalAlignment: Center,
+          TextColor: #94969a
+        );
+      }
+
+      $C.@PanelSeparatorFancy {}
+
+      Group #RotationGroup {
+        Anchor: (Top: 20);
+        LayoutMode: Left;
+        Padding: (Horizontal: 15);
+
+        Label {
+          Anchor: (Width: 80);
+          Text: %server.customUI.generic.rotate;
+          Style: (...$C.@DefaultLabelStyle, VerticalAlignment: Center, Wrap: true);
+        }
+
+        Slider #RotationOffset {
+          Anchor: (Left: 5, Width: 200, Height: 3, Right: 0);
+          Style: (
+            ...$C.@DefaultSliderStyle,
+            Background: (Color: #333333)
+          );
+          Min: -180;
+          Max: 180;
+          Step: 5;
+        }
+
+        Label #RotationValue {
+          Anchor: (Left: 5, Width: 50);
+          Text: "0\\u00B0";
+          Style: (...$C.@DefaultLabelStyle, VerticalAlignment: Center, HorizontalAlignment: End);
+        }
+      }
+
+      Group #ScaleGroup {
+        Anchor: (Top: 20);
+        LayoutMode: Left;
+        Padding: (Horizontal: 15);
+
+        Label {
+          Anchor: (Width: 80);
+          Text: %server.customUI.entitySpawnPage.scale;
+          Style: (...$C.@DefaultLabelStyle, VerticalAlignment: Center, Wrap: true);
+        }
+
+        FloatSlider #ScaleSlider {
+          Anchor: (Left: 5, Width: 200, Height: 3);
+          Style: (
+            ...$C.@DefaultSliderStyle,
+            Background: (Color: #333333)
+          );
+          Min: 0.1;
+          Max: 5.0;
+          Step: 0.1;
+          Value: 1.0;
+        }
+
+        Label #ScaleValue {
+          Anchor: (Left: 5, Width: 50);
+          Text: "1.0";
+          Style: (...$C.@DefaultLabelStyle, VerticalAlignment: Center, HorizontalAlignment: End);
+        }
+      }
+    }
+
+    Group {
+      LayoutMode: Top;
+      Anchor: (Top: 15);
+
+      $C.@TextButton #Spawn {
+        Text: %server.customUI.entitySpawnPage.spawn;
+      }
+    }
+  }
+}
+
+$C.@BackButton {}

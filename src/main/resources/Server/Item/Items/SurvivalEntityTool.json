@@ -1,0 +1,80 @@
+{
+  "TranslationProperties": {
+    "Name": "surventool.tool.name",
+    "Description": "server.builderTools.tools.Entity.description"
+  },
+  "Categories": [
+    "Tool.BuilderTool"
+  ],
+  "SubCategory": "BasicTools",
+  "Model": "Items/Weapons/Staff/Onyxium.blockymodel",
+  "Texture": "Items/Tools/SurvivalEntityTool_Texture.png",
+  "MaxStack": 1,
+  "PlayerAnimationsId": "Staff",
+  "HudUI": [
+    {
+      "Path": "Hud/ToolsLegends/EntityToolLegend.ui",
+      "Type": "Legend"
+    }
+  ],
+  "Recipe": {
+    "TimeSeconds": 3,
+    "Input": [
+      {
+        "ItemId": "Ingredient_Life_Essence",
+        "Quantity": 100
+      },
+      {
+        "ItemId": "Ingredient_Bar_Adamantite",
+        "Quantity": 10
+      },
+      {
+        "ItemId": "Ingredient_Voidheart",
+        "Quantity": 1
+      }
+    ],
+    "BenchRequirement": [
+      {
+        "Id": "Arcanebench",
+        "Type": "Crafting",
+        "Categories": [
+          "Arcane_Misc"
+        ]
+      }
+    ]
+  },
+  "BuilderTool": {
+    "Id": "Entity",
+    "IsBrush": false,
+    "SurvivalAllowed": true
+  },
+  "Interactions": {
+    "Primary": "Builder_Tool",
+    "Secondary": "Builder_Tool",
+    "Ability2": "SurventoolSpawnRootInteraction"
+  },
+  "InteractionConfig": {
+    "DebugOutlines": true,
+    "UseDistance": {
+      "Adventure": 128,
+      "Creative": 128
+    },
+    "AllEntities": true
+  },
+  "Quality": "Legendary",
+  "IconProperties": {
+    "Scale": 0.28,
+    "Rotation": [
+      45,
+      90,
+      0
+    ],
+    "Translation": [
+      -53,
+      -52
+    ]
+  },
+  "DroppedItemAnimation": "Items/Animations/Dropped/Dropped_Diagonal_Left.blockyanim",
+  "Icon": "Icons/ItemsGenerated/SurvivalEntityTool.png",
+  "ItemSoundSetId": "ISS_Weapons_Wood"
+}

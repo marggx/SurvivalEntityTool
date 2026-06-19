@@ -1,0 +1,30 @@
+{
+    "Group": "Marggx",
+    "Name": "SurvivalEntityTool",
+    "Version": "1.0.0",
+    "Description": "A Plugin that allows you to use the Entity Tool in Survival Mode",
+    "Authors": [
+        {
+            "Name": "Marggx",
+            "Email": "hytale@marggx.dev",
+            "Url": "marggx.dev"
+        }
+    ],
+    "Website": "marggx.dev",
+    "Main": "dev.marggx.surventool.SurvivalEntityToolPlugin",
+    "ServerVersion": "^0.6.0-pre.4",
+    "Dependencies": {
+        "Hytale:AssetModule": "*"
+    },
+    "OptionalDependencies": {
+        
+    },
+    "LoadBefore": {
+        
+    },
+    "DisabledByDefault": false,
+    "IncludesAssetPack": true,
+    "SubPlugins": [
+        
+    ]
+}
