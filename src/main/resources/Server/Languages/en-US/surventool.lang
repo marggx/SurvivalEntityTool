@@ -1,1 +1,3 @@
 tool.name = Survival Entity Tool
+remove.denied = You can't remove Entities in Survival Mode, just pick up the Entity!
+clone.denied = You can't clone Entities in Survival Mode, just place a new one!

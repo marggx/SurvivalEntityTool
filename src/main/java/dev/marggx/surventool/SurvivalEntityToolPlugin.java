@@ -2,10 +2,12 @@ package dev.marggx.surventool;
 
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandManager;
+import com.hypixel.hytale.server.core.io.ServerManager;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.server.OpenCustomUIInteraction;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import dev.marggx.surventool.commands.CustomSpawnPageCommand;
+import dev.marggx.surventool.packets.PacketHandler;
 import dev.marggx.surventool.ui.supplier.SpawnEntityPageSupplier;
 import dev.marggx.surventool.utils.Logger;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -21,7 +23,9 @@ public class SurvivalEntityToolPlugin extends JavaPlugin {
         super(init);
     }
 
-    public static SurvivalEntityToolPlugin get() { return INSTANCE; }
+    public static SurvivalEntityToolPlugin get() {
+        return INSTANCE;
+    }
 
     @Override
     protected void setup() {
@@ -30,7 +34,7 @@ public class SurvivalEntityToolPlugin extends JavaPlugin {
         Logger.get().info("Plugin " + this.getName() + " with version " + this.getManifest().getVersion().toString() + " is starting");
         OpenCustomUIInteraction.registerCustomPageSupplier(this, SpawnEntityPageSupplier.class, "SurventoolSpawnEntity", new SpawnEntityPageSupplier());
         overrideSpawnPageCommand();
-
+        ServerManager.get().registerSubPacketHandlers(PacketHandler::new);
     }
 
     private void overrideSpawnPageCommand() {
