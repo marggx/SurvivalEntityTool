@@ -6,7 +6,6 @@ import com.hypixel.hytale.math.util.ChunkUtil;
 import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.entity.InteractionManager;
-import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.ecs.UseBlockEvent;
 import com.hypixel.hytale.server.core.inventory.InventoryComponent;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
@@ -42,7 +41,8 @@ public class Inventory {
                     var containerBlock = blockRef.getStore().getComponent(blockRef, ItemContainerBlock.getComponentType());
                     if (containerBlock != null) {
                         var inventory = containerBlock.getItemContainer();
-                        if (scannedContainers.stream().anyMatch(scannedInventory -> scannedInventory.container().equals(inventory))) continue;
+                        if (scannedContainers.stream().anyMatch(scannedInventory -> scannedInventory.container().equals(inventory)))
+                            continue;
                         if (!isBlockInteractable(ref, world, (int) (position.x() + x), (int) (position.y() + y), (int) (position.z() + z)))
                             continue;
                         scannedContainers.add(new ScannedInventory(inventory, containerBlock));
@@ -88,11 +88,13 @@ public class Inventory {
         return list.stream().collect(LinkedHashMap::new, (m, v) -> m.put(v.getKey(), v.getValue()), HashMap::putAll);
     }
 
-    public record InventoryScan(HashMap<String, Integer> items, List<ScannedInventory> scannedInventories) {}
+    public record InventoryScan(HashMap<String, Integer> items, List<ScannedInventory> scannedInventories) {
+    }
 
-    public record ScannedInventory(ItemContainer container, ItemContainerBlock containerBlock) {}
+    public record ScannedInventory(ItemContainer container, ItemContainerBlock containerBlock) {
+    }
 
-    public static boolean isBlockInteractable(Ref<EntityStore> ref, World world, int x, int y, int z){
+    public static boolean isBlockInteractable(Ref<EntityStore> ref, World world, int x, int y, int z) {
         if (!ref.getStore().isInThread()) return false;
         var blockType = world.getBlockType(x, y, z);
         if (blockType == null && blockType.getId().toLowerCase(Locale.ROOT).contains("trash")) return false;
@@ -103,7 +105,7 @@ public class Inventory {
         return !event.isCancelled();
     }
 
-    public static boolean removeItemFromAnyInventory (List<ScannedInventory> inventories, String name, Ref<EntityStore> ref, Store<EntityStore> store) {
+    public static boolean removeItemFromAnyInventory(List<ScannedInventory> inventories, String name, Ref<EntityStore> ref, Store<EntityStore> store) {
         for (ScannedInventory inventory : inventories) {
             ItemContainer container = inventory.container();
             for (short i = 0; i < container.getCapacity(); i++) {

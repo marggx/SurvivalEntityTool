@@ -35,7 +35,6 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.TargetUtil;
-import com.hypixel.hytale.server.npc.pages.EntitySpawnPage;
 import dev.marggx.surventool.utils.Inventory;
 import dev.marggx.surventool.utils.Logger;
 import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
@@ -45,14 +44,13 @@ import org.joml.Vector3i;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.PageData> {
     private static final Logger LOGGER = Logger.get();
     @Nonnull
-    private String searchQuery = "";
+    private final String searchQuery = "";
     @Nullable
     private String selectedItemId;
     @Nullable
@@ -87,7 +85,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
                 false
         );
         eBuilder.addEventBinding(
-                CustomUIEventBindingType.ValueChanged, "#ScaleSlider", 
+                CustomUIEventBindingType.ValueChanged, "#ScaleSlider",
                 new EventData().append(PageData.ACTION, PageData.Action.UpdateScale).append(PageData.SCALE, "#ScaleSlider.Value"),
                 false
         );
@@ -115,13 +113,16 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
                 new EventData().append(PageData.ACTION, PageData.Action.ClearMaterial),
                 false
         );
+        int rotationDegrees = (int) Math.toDegrees(this.currentRotationOffset);
+        cBuilder.set("#RotationOffset.Value", rotationDegrees);
+        cBuilder.set("#RotationValue.Text", String.format("%d\u00b0", rotationDegrees));
         this.buildItemsContent(ref, store, cBuilder, eBuilder);
     }
 
     private void buildItemsContent(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store, @Nonnull UICommandBuilder cBuilder, @Nonnull UIEventBuilder eBuilder) {
         if (this.selectedItemId != null) {
 
-            Item item = (Item)Item.getAssetMap().getAsset(this.selectedItemId);
+            Item item = Item.getAssetMap().getAsset(this.selectedItemId);
             if (item != null) {
                 cBuilder.set("#SelectedName.Text", this.selectedItemId);
                 cBuilder.set("#ItemMaterialSlot.Slots", new ItemGridSlot[]{new ItemGridSlot(new ItemStack(this.selectedItemId, 1))});
@@ -161,7 +162,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
     }
 
     private void selectItem(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store, @Nonnull String itemId, @Nonnull UICommandBuilder commandBuilder) {
-        Item item = (Item)Item.getAssetMap().getAsset(itemId);
+        Item item = Item.getAssetMap().getAsset(itemId);
         if (item != null) {
             this.selectedItemId = itemId;
             commandBuilder.set("#SelectedName.Text", itemId);
@@ -188,7 +189,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
             } else {
                 this.initPosition(ref, store);
                 Holder<EntityStore> holder = store.getRegistry().newHolder();
-                holder.addComponent(NetworkId.getComponentType(), new NetworkId(((EntityStore)store.getExternalData()).takeNextNetworkId()));
+                holder.addComponent(NetworkId.getComponentType(), new NetworkId(store.getExternalData().takeNextNetworkId()));
                 holder.addComponent(EntityStore.REGISTRY.getNonSerializedComponentType(), NonSerialized.get());
                 Rotation3f previewRotation = new Rotation3f(this.rotation);
                 previewRotation.setYaw(this.rotation.yaw() + this.currentRotationOffset);
@@ -223,7 +224,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
 
                         for (int i = 0; i < count; i++) {
                             Holder<EntityStore> holder = store.getRegistry().newHolder();
-                            holder.addComponent(NetworkId.getComponentType(), new NetworkId(((EntityStore)store.getExternalData()).takeNextNetworkId()));
+                            holder.addComponent(NetworkId.getComponentType(), new NetworkId(store.getExternalData().takeNextNetworkId()));
                             holder.addComponent(TransformComponent.getComponentType(), new TransformComponent(this.position, spawnRotation));
                             holder.addComponent(ModelComponent.getComponentType(), new ModelComponent(model));
                             holder.addComponent(PersistentModel.getComponentType(), new PersistentModel(new Model.ModelReference(modelId, this.currentScale, null, true)));
@@ -263,7 +264,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
                     } else {
                         for (int i = 0; i < count; i++) {
                             Holder<EntityStore> holder = store.getRegistry().newHolder();
-                            holder.addComponent(NetworkId.getComponentType(), new NetworkId(((EntityStore)store.getExternalData()).takeNextNetworkId()));
+                            holder.addComponent(NetworkId.getComponentType(), new NetworkId(store.getExternalData().takeNextNetworkId()));
                             holder.addComponent(TransformComponent.getComponentType(), new TransformComponent(this.position, spawnRotation));
                             ItemStack itemStack = new ItemStack(this.selectedItemId, 1);
                             itemStack.setOverrideDroppedItemAnimation(true);
@@ -282,7 +283,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
                     }
 
                     Inventory.removeItemFromAnyInventory(invScan.scannedInventories(), this.selectedItemId, ref, store);
-                    ((Player)store.getComponent(ref, Player.getComponentType())).getPageManager().setPage(ref, store, Page.None);
+                    store.getComponent(ref, Player.getComponentType()).getPageManager().setPage(ref, store, Page.None);
                     this.playerRef
                             .sendMessage(Message.translation("server.customUI.entitySpawnPage.spawnedItem").param("quantity", count).param("item", this.selectedItemId));
                 }
@@ -294,7 +295,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
     private String getItemModelId(@Nonnull Item item) {
         String modelId = item.getModel();
         if (modelId == null && item.hasBlockType()) {
-            BlockType blockType = (BlockType)BlockType.getAssetMap().getAsset(item.getId());
+            BlockType blockType = BlockType.getAssetMap().getAsset(item.getId());
             if (blockType != null && blockType.getCustomModel() != null) {
                 modelId = blockType.getCustomModel();
             }
@@ -309,7 +310,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
         if (modelId == null) {
             return null;
         } else {
-            ModelAsset modelAsset = (ModelAsset)ModelAsset.getAssetMap().getAsset(modelId);
+            ModelAsset modelAsset = ModelAsset.getAssetMap().getAsset(modelId);
             return modelAsset != null ? Model.createStaticScaledModel(modelAsset, this.currentScale) : null;
         }
     }
@@ -317,7 +318,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
 
     private void updatePreviewScale(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
         if (this.modelPreview != null && this.modelPreview.isValid()) {
-            EntityScaleComponent existingScale = (EntityScaleComponent)store.getComponent(this.modelPreview, EntityScaleComponent.getComponentType());
+            EntityScaleComponent existingScale = store.getComponent(this.modelPreview, EntityScaleComponent.getComponentType());
             if (existingScale != null) {
                 boolean hasBlock = store.getComponent(this.modelPreview, BlockEntity.getComponentType()) != null;
                 existingScale.setScale(hasBlock ? this.currentScale * 2.0F : this.currentScale);
@@ -326,11 +327,11 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
     }
 
     private void initPosition(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
-        TransformComponent transformComponent = (TransformComponent)store.getComponent(ref, TransformComponent.getComponentType());
+        TransformComponent transformComponent = store.getComponent(ref, TransformComponent.getComponentType());
 
         assert transformComponent != null;
 
-        HeadRotation headRotationComponent = (HeadRotation)store.getComponent(ref, HeadRotation.getComponentType());
+        HeadRotation headRotationComponent = store.getComponent(ref, HeadRotation.getComponentType());
 
         assert headRotationComponent != null;
 
@@ -343,7 +344,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
             previewPosition = lookTarget;
         } else {
             Vector3d aheadPosition = new Vector3d(playerPosition).add(new Vector3d(direction).mul(4.0));
-            World world = ((EntityStore)store.getExternalData()).getWorld();
+            World world = store.getExternalData().getWorld();
             Vector3i groundTarget = TargetUtil.getTargetBlock(
                     world, (blockId, fluidId) -> blockId != 0, aheadPosition.x, aheadPosition.y + 0.5, aheadPosition.z, 0.0, -1.0, 0.0, 3.0
             );
@@ -365,7 +366,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
         this.clearPreview(store);
         this.initPosition(ref, store);
         Holder<EntityStore> holder = store.getRegistry().newHolder();
-        holder.addComponent(NetworkId.getComponentType(), new NetworkId(((EntityStore)store.getExternalData()).takeNextNetworkId()));
+        holder.addComponent(NetworkId.getComponentType(), new NetworkId(store.getExternalData().takeNextNetworkId()));
         holder.addComponent(EntityStore.REGISTRY.getNonSerializedComponentType(), NonSerialized.get());
         Rotation3f previewRotation = new Rotation3f(this.rotation);
         previewRotation.setYaw(this.rotation.yaw() + this.currentRotationOffset);
@@ -380,7 +381,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
         this.clearPreview(store);
         this.initPosition(ref, store);
         Holder<EntityStore> holder = store.getRegistry().newHolder();
-        holder.addComponent(NetworkId.getComponentType(), new NetworkId(((EntityStore)store.getExternalData()).takeNextNetworkId()));
+        holder.addComponent(NetworkId.getComponentType(), new NetworkId(store.getExternalData().takeNextNetworkId()));
         holder.addComponent(EntityStore.REGISTRY.getNonSerializedComponentType(), NonSerialized.get());
         ItemStack itemStack = new ItemStack(itemId, 1);
         itemStack.setOverrideDroppedItemAnimation(true);
@@ -403,7 +404,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
         commandBuilder.set("#ItemMaterialSlot.Slots", new ItemGridSlot[]{new ItemGridSlot()});
         commandBuilder.set("#ClearMaterial.Visible", false);
         commandBuilder.set("#DropIndicator.Visible", true);
-        this.sendUpdate(commandBuilder, (UIEventBuilder)null, false);
+        this.sendUpdate(commandBuilder, null, false);
     }
 
     public void handleDataEvent(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store, @Nonnull SpawnEntityPage.PageData data) {
@@ -416,45 +417,45 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
 
         switch (data.action) {
             case Spawn:
-                this.spawnItem(ref, store,1);
-                this.sendUpdate(cBuilder, (UIEventBuilder)null, false);
+                this.spawnItem(ref, store, 1);
+                this.sendUpdate(cBuilder, null, false);
                 break;
             case AvailableItemSelected:
                 this.selectItem(ref, store, data.itemId, cBuilder);
-                this.sendUpdate(cBuilder, (UIEventBuilder)null, false);
+                this.sendUpdate(cBuilder, null, false);
                 break;
             case ClearMaterial:
                 this.clearSelectedItem(ref, store);
-                this.sendUpdate(cBuilder, (UIEventBuilder)null, false);
+                this.sendUpdate(cBuilder, null, false);
                 break;
             case UpdateRotationOffset:
                 float rawRotation = data.rotationOffset;
-                data.rotationOffset = (float)Math.clamp((long)Math.round(data.rotationOffset), -180, 180);
-                this.currentRotationOffset = (float)Math.toRadians((double)data.rotationOffset);
+                data.rotationOffset = (float) Math.clamp(Math.round(data.rotationOffset), -180, 180);
+                this.currentRotationOffset = (float) Math.toRadians(data.rotationOffset);
                 if (rawRotation != data.rotationOffset) {
-                    cBuilder.set("#RotationOffset.Value", (int)data.rotationOffset);
+                    cBuilder.set("#RotationOffset.Value", (int) data.rotationOffset);
                 }
 
-                cBuilder.set("#RotationValue.Text", String.format("%d°", (int)data.rotationOffset));
-                this.sendUpdate(cBuilder, (UIEventBuilder)null, false);
+                cBuilder.set("#RotationValue.Text", String.format("%d°", (int) data.rotationOffset));
+                this.sendUpdate(cBuilder, null, false);
                 if (this.modelPreview != null && this.modelPreview.isValid()) {
-                    TransformComponent transform = (TransformComponent)store.getComponent(this.modelPreview, TransformComponent.getComponentType());
+                    TransformComponent transform = store.getComponent(this.modelPreview, TransformComponent.getComponentType());
                     transform.getRotation().setYaw(this.rotation.yaw() + this.currentRotationOffset);
-                    HeadRotation headRotation = (HeadRotation)store.getComponent(this.modelPreview, HeadRotation.getComponentType());
+                    HeadRotation headRotation = store.getComponent(this.modelPreview, HeadRotation.getComponentType());
                     if (headRotation != null) {
                         headRotation.getRotation().setYaw(this.rotation.yaw() + this.currentRotationOffset);
                     }
                 }
                 break;
             case RotationReleased:
-                data.rotationOffset = (float)Math.clamp((long)Math.round(data.rotationOffset), -180, 180);
-                this.currentRotationOffset = (float)Math.toRadians((double)data.rotationOffset);
-                cBuilder.set("#RotationValue.Text", String.format("%d°", (int)data.rotationOffset));
-                this.sendUpdate(cBuilder, (UIEventBuilder)null, false);
+                data.rotationOffset = (float) Math.clamp(Math.round(data.rotationOffset), -180, 180);
+                this.currentRotationOffset = (float) Math.toRadians(data.rotationOffset);
+                cBuilder.set("#RotationValue.Text", String.format("%d°", (int) data.rotationOffset));
+                this.sendUpdate(cBuilder, null, false);
                 if (this.modelPreview != null && this.modelPreview.isValid()) {
-                    TransformComponent transform = (TransformComponent)store.getComponent(this.modelPreview, TransformComponent.getComponentType());
+                    TransformComponent transform = store.getComponent(this.modelPreview, TransformComponent.getComponentType());
                     transform.getRotation().setYaw(this.rotation.yaw() + this.currentRotationOffset);
-                    HeadRotation headRotation = (HeadRotation)store.getComponent(this.modelPreview, HeadRotation.getComponentType());
+                    HeadRotation headRotation = store.getComponent(this.modelPreview, HeadRotation.getComponentType());
                     if (headRotation != null) {
                         headRotation.getRotation().setYaw(this.rotation.yaw() + this.currentRotationOffset);
                     }
@@ -465,13 +466,13 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
                     break;
                 }
                 float rawScale = data.scale;
-                this.currentScale = Math.clamp((float)Math.round(data.scale * 10.0F) / 10.0F, 0.1F, 5.0F);
+                this.currentScale = Math.clamp((float) Math.round(data.scale * 10.0F) / 10.0F, 0.1F, 5.0F);
                 if (rawScale != this.currentScale) {
                     cBuilder.set("#ScaleSlider.Value", this.currentScale);
                 }
 
                 cBuilder.set("#ScaleValue.Text", String.format("%.1f", this.currentScale));
-                this.sendUpdate(cBuilder, (UIEventBuilder)null, false);
+                this.sendUpdate(cBuilder, null, false);
                 long now = System.currentTimeMillis();
                 if (this.modelPreview != null && this.modelPreview.isValid() && this.currentScale != this.lastPreviewScale && now - this.lastScaleUpdateTime >= 200L) {
                     this.lastScaleUpdateTime = now;
@@ -486,7 +487,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
                 if (data.scale < 0.1F) {
                     break;
                 }
-                this.currentScale = Math.clamp((float)Math.round(data.scale * 10.0F) / 10.0F, 0.1F, 5.0F);
+                this.currentScale = Math.clamp((float) Math.round(data.scale * 10.0F) / 10.0F, 0.1F, 5.0F);
                 UICommandBuilder scaleReleasedCmd = new UICommandBuilder();
                 scaleReleasedCmd.set("#ScaleValue.Text", String.format("%.1f", this.currentScale));
                 this.sendUpdate(scaleReleasedCmd, null, false);
@@ -522,7 +523,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
             Spawn,
             SetItemMaterial,
             ClearMaterial;
-            
+
             Action() {
             }
         }
