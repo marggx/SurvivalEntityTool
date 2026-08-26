@@ -35,6 +35,6 @@ Suggestions, ideas, and feedback are welcome.
 
 ### X: [@MarggxDev](https://x.com/MarggxDev)
 
-### Discord: [Marggx](https://discord.gg/Hx5jFT95)
+### Discord: [Marggx](https://discord.gg/rNZvMSb7eQ)
 
 ---
