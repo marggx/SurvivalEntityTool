@@ -12,7 +12,7 @@
     ],
     "Website": "marggx.dev",
     "Main": "dev.marggx.surventool.SurvivalEntityToolPlugin",
-    "ServerVersion": "^0.6.0-pre.4",
+    "ServerVersion": "^0.6.0",
     "Dependencies": {
         "Hytale:AssetModule": "*"
     },

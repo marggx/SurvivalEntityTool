@@ -247,7 +247,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
                             Holder<EntityStore> holder = store.getRegistry().newHolder();
                             holder.addComponent(BlockEntity.getComponentType(), new BlockEntity(this.selectedItemId));
                             holder.addComponent(TransformComponent.getComponentType(), new TransformComponent(this.position, spawnRotation));
-                            holder.addComponent(EntityScaleComponent.getComponentType(), new EntityScaleComponent(this.currentScale * 2.0F));
+                            holder.addComponent(EntityScaleComponent.getComponentType(), new EntityScaleComponent(this.currentScale));
                             ItemStack itemStack = new ItemStack(this.selectedItemId, 1);
                             itemStack.setOverrideDroppedItemAnimation(true);
                             holder.addComponent(ItemComponent.getComponentType(), new ItemComponent(itemStack));
@@ -320,8 +320,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
         if (this.modelPreview != null && this.modelPreview.isValid()) {
             EntityScaleComponent existingScale = store.getComponent(this.modelPreview, EntityScaleComponent.getComponentType());
             if (existingScale != null) {
-                boolean hasBlock = store.getComponent(this.modelPreview, BlockEntity.getComponentType()) != null;
-                existingScale.setScale(hasBlock ? this.currentScale * 2.0F : this.currentScale);
+                existingScale.setScale(this.currentScale);
             }
         }
     }
@@ -372,7 +371,7 @@ public class SpawnEntityPage extends InteractiveCustomUIPage<SpawnEntityPage.Pag
         previewRotation.setYaw(this.rotation.yaw() + this.currentRotationOffset);
         holder.addComponent(BlockEntity.getComponentType(), new BlockEntity(blockTypeKey));
         holder.addComponent(TransformComponent.getComponentType(), new TransformComponent(this.position, previewRotation));
-        holder.addComponent(EntityScaleComponent.getComponentType(), new EntityScaleComponent(this.currentScale * 2.0F));
+        holder.addComponent(EntityScaleComponent.getComponentType(), new EntityScaleComponent(this.currentScale));
         this.modelPreview = store.addEntity(holder, AddReason.SPAWN);
         this.lastPreviewScale = this.currentScale;
     }

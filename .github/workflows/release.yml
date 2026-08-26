@@ -20,10 +20,18 @@ jobs:
           java-version: '25'
           distribution: 'temurin'
 
+      - name: Read patchline from gradle.properties
+        id: patchline
+        run: |
+          PATCHLINE=$(grep '^patchline=' gradle.properties | cut -d= -f2)
+          echo "patchline=${PATCHLINE}" >> $GITHUB_OUTPUT
+          echo "Patchline: ${PATCHLINE}"
+
       - name: Fetch latest Hytale Server version
         id: hytale-version
         run: |
-          LATEST_VERSION=$(curl -s https://maven.hytale.com/pre-release/com/hypixel/hytale/Server/maven-metadata.xml \
+          PATCH_LINE="${{ steps.patchline.outputs.patchline }}"
+          LATEST_VERSION=$(curl -s https://maven.hytale.com/${PATCH_LINE}/com/hypixel/hytale/Server/maven-metadata.xml \
             | grep -o '<latest>[^<]*</latest>' | sed 's/<[^>]*>//g')
           echo "version=${LATEST_VERSION}" >> $GITHUB_OUTPUT
           echo "Fetched Hytale Server version: $LATEST_VERSION"
@@ -31,33 +39,24 @@ jobs:
       - name: Update versions in gradle.properties
         run: |
           VERSION="${GITHUB_REF_NAME}"
-          SERVER_VERSION="${{ steps.hytale-version.outputs.version }}"
           sed -i "s/^version=.*/version=${VERSION}/" gradle.properties
-          sed -i "s/^server_version=.*/server_version=${SERVER_VERSION}/" gradle.properties
-          echo "Building version: ${VERSION}, Server version: ${SERVER_VERSION}"
-
-      - name: Cache Hytale Server JAR
-        id: cache-hytale
-        uses: actions/cache@v4
-        with:
-          path: ${{ runner.temp }}/hytale-home
-          key: hytale-server-${{ steps.hytale-version.outputs.version }}
+          echo "Building version: ${VERSION}"
 
       - name: Download Hytale Server JAR
-        if: steps.cache-hytale.outputs.cache-hit != 'true'
         run: |
           LATEST_VERSION="${{ steps.hytale-version.outputs.version }}"
-          JAR_DIR="${{ runner.temp }}/hytale-home/"
+          PATCH_LINE="${{ steps.patchline.outputs.patchline }}"
+          JAR_DIR="${{ runner.temp }}/hytale-home/install/${PATCH_LINE}/package/game/latest/Server/"
           mkdir -p "$JAR_DIR"
           echo "Downloading Hytale Server version: $LATEST_VERSION"
-          curl -L "https://maven.hytale.com/pre-release/com/hypixel/hytale/Server/${LATEST_VERSION}/Server-${LATEST_VERSION}.jar" \
+          curl -L "https://maven.hytale.com/${PATCH_LINE}/com/hypixel/hytale/Server/${LATEST_VERSION}/Server-${LATEST_VERSION}.jar" \
             -o "$JAR_DIR/HytaleServer.jar"
 
       - name: Make gradlew executable
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build -Pjar_dir="${{ runner.temp }}/hytale-home"
+        run: ./gradlew build -Phytale_home="${{ runner.temp }}/hytale-home"
 
       - name: Commit and push updated files
         run: |
