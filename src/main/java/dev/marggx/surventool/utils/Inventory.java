@@ -1,9 +1,10 @@
 package dev.marggx.surventool.utils;
 
+import com.hypixel.hytale.builtin.buildertools.world.SectionAccessor;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.math.util.ChunkUtil;
 import com.hypixel.hytale.protocol.InteractionType;
+import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.entity.InteractionManager;
 import com.hypixel.hytale.server.core.event.events.ecs.UseBlockEvent;
@@ -13,6 +14,7 @@ import com.hypixel.hytale.server.core.inventory.container.CombinedItemContainer;
 import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
 import com.hypixel.hytale.server.core.inventory.transaction.ItemStackSlotTransaction;
 import com.hypixel.hytale.server.core.inventory.transaction.ItemStackTransaction;
+import com.hypixel.hytale.server.core.modules.block.BlockModule;
 import com.hypixel.hytale.server.core.modules.block.components.ItemContainerBlock;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.interaction.InteractionSimulationHandler;
@@ -32,9 +34,7 @@ public class Inventory {
         for (int x = -range; x <= range; x++) {
             for (int y = -range; y < range; y++) {
                 for (int z = -range; z <= range; z++) {
-                    var worldChunk = world.getChunk(ChunkUtil.indexChunkFromBlock(position.x() + x, position.z() + z));
-                    if (worldChunk == null) continue;
-                    var blockRef = worldChunk.getBlockComponentEntity((int) (position.x() + x), (int) (position.y() + y), (int) (position.z() + z));
+                    var blockRef = BlockModule.getBlockEntity(world, (int) (position.x() + x), (int) (position.y() + y), (int) (position.z() + z));
 
                     if (blockRef == null) continue;
 
@@ -96,8 +96,8 @@ public class Inventory {
 
     public static boolean isBlockInteractable(Ref<EntityStore> ref, World world, int x, int y, int z) {
         if (!ref.getStore().isInThread()) return false;
-        var blockType = world.getBlockType(x, y, z);
-        if (blockType == null && blockType.getId().toLowerCase(Locale.ROOT).contains("trash")) return false;
+        var blockType = BlockType.getAssetMap().getAsset(SectionAccessor.forWorld(world).getBlock(x, y, z));
+        if (blockType == null || blockType.getId().toLowerCase(Locale.ROOT).contains("trash")) return false;
         var playerRef = ref.getStore().getComponent(ref, PlayerRef.getComponentType());
         var interactionManager = new InteractionManager(playerRef, new InteractionSimulationHandler());
         var event = new UseBlockEvent.Pre(InteractionType.Use, InteractionContext.forProxyEntity(interactionManager, ref, ref, ref.getStore()), new Vector3i(x, y, z), blockType);

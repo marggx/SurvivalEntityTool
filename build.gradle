@@ -71,6 +71,11 @@ tasks.register('updatePluginManifest') {
     }
 }
 
+// Makes sure the plugin manifest is up to date.
+tasks.named('processResources') {
+    dependsOn 'updatePluginManifest'
+}
+
 def createServerRunArguments(String srcDir) {
     def programParameters = '--allow-op --disable-sentry --assets="' + "${hytaleHome}/install/$patchline/package/game/latest/Assets.zip" + '"'
     def modPaths = []

@@ -44,6 +44,8 @@ public class PacketHandler implements SubPacketHandler {
             @Nonnull World world,
             @Nonnull Store<EntityStore> store
     ) {
+        if (world.getEntityStore().getRefFromNetworkId(packet.entityId) == null) return;
+
         Player playerComponent = store.getComponent(ref, Player.getComponentType());
         if (playerComponent == null || playerComponent.getGameMode() == GameMode.Creative) {
             builderToolsPacketHandler.handleBuilderToolEntityAction(packet, playerRef, ref, world, store);
