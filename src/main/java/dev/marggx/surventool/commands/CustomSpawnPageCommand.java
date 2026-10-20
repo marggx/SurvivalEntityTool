@@ -15,6 +15,7 @@ import dev.marggx.surventool.ui.SpawnEntityPage;
 public class CustomSpawnPageCommand extends AbstractPlayerCommand {
     public CustomSpawnPageCommand() {
         super("server.commands.npc.spawn.page.desc");
+        requireNoPermission();
     }
 
     @Override
