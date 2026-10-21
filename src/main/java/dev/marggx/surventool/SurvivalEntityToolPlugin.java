@@ -4,6 +4,9 @@ import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandManager;
 import com.hypixel.hytale.server.core.io.ServerManager;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.server.OpenCustomUIInteraction;
+import com.hypixel.hytale.server.core.permissions.HytalePermissions;
+import com.hypixel.hytale.server.core.permissions.PermissionsModule;
+import com.hypixel.hytale.server.core.permissions.provider.HytalePermissionsProvider;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import dev.marggx.surventool.commands.CustomSpawnPageCommand;
@@ -33,8 +36,18 @@ public class SurvivalEntityToolPlugin extends JavaPlugin {
         INSTANCE = this;
         Logger.get().info("Plugin " + this.getName() + " with version " + this.getManifest().getVersion().toString() + " is starting");
         OpenCustomUIInteraction.registerCustomPageSupplier(this, SpawnEntityPageSupplier.class, "SurventoolSpawnEntity", new SpawnEntityPageSupplier());
+        grantEntityToolPermission();
         overrideSpawnPageCommand();
         ServerManager.get().registerSubPacketHandlers(PacketHandler::new);
+    }
+
+    private void grantEntityToolPermission() {
+        try {
+            PermissionsModule.registerPermission(HytalePermissions.EDITOR_TOOL_ENTITY.getId(), HytalePermissionsProvider.GROUP_ADVENTURER);
+            PermissionsModule.get().refreshVirtualGroups();
+        } catch (Exception e) {
+            Logger.get().warning("Failed to register entity tool permission: " + e.getMessage());
+        }
     }
 
     private void overrideSpawnPageCommand() {
